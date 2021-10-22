@@ -1,5 +1,6 @@
 {
     "name": "tfd/statamic-cloudinary",
+    "license": "MIT",
     "scripts": {
         "lint": "@php ./vendor/bin/php-cs-fixer fix -v --config .php-cs-fixer.php"
     },
