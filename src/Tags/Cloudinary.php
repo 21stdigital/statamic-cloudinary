@@ -89,21 +89,21 @@ class Cloudinary extends Tags
     protected function setConfiguration()
     {
         $this->configuration = collect([
-            'cloud_name' => config('cloudinary.cloud_name'),
-            'cloudinary_upload_url' => config('cloudinary.upload_url'),
-            'auto_mapping_folder' => config('cloudinary.auto_mapping_folder'),
-            'api_key' => config('cloudinary.api_key'),
-            'api_secret' => config('cloudinary.api_secret'),
-            'upload_preset' => config('cloudinary.upload_preset'),
-            'notification_url' => config('cloudinary.notification_url'),
-            'cloudinary_url' => config('cloudinary.url'),
-            'cloudinary_delivery_type' => config('cloudinary.delivery_type'),
+            'cloud_name' => config('statamic.cloudinary.cloud_name'),
+            'cloudinary_upload_url' => config('statamic.cloudinary.upload_url'),
+            'auto_mapping_folder' => config('statamic.cloudinary.auto_mapping_folder'),
+            'api_key' => config('statamic.cloudinary.api_key'),
+            'api_secret' => config('statamic.cloudinary.api_secret'),
+            'upload_preset' => config('statamic.cloudinary.upload_preset'),
+            'notification_url' => config('statamic.cloudinary.notification_url'),
+            'cloudinary_url' => config('statamic.cloudinary.url'),
+            'cloudinary_delivery_type' => config('statamic.cloudinary.delivery_type'),
         ]);
     }
 
     protected function setDefaultTransformations()
     {
-        $this->default_transformations = collect(config('cloudinary.default_transformations'));
+        $this->default_transformations = collect(config('statamic.cloudinary.default_transformations'));
     }
 
     public function hasValidConfiguration()

@@ -15,8 +15,11 @@ class ServiceProvider extends AddonServiceProvider
     {
         parent::boot();
 
-        $this->
-            bootAddonConfig();
+        $this->bootAddonConfig();
+
+        $this->publishes([
+            __DIR__.'/../config/cloudinary.php' => config_path('statamic/cloudinary.php'),
+        ], 'cloudinary-config');
     }
 
     protected function bootAddonConfig()
