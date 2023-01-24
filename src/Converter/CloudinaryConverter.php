@@ -234,6 +234,11 @@ class CloudinaryConverter
         $params = collect();
 
         foreach ($this->params as $param => $value) {
+            if ($param === 'square') {
+                $params->put('width', $value);
+                $params->put('aspect_ratio', '1:1');
+                break;
+            }
             if (!in_array($param, ['src', 'id', 'path', 'tag', 'alt'])) {
                 $params->put($param, $value);
             }
