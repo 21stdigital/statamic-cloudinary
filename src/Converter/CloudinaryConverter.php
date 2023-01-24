@@ -10,7 +10,6 @@ use Illuminate\Support\ItemNotFoundException;
 
 class CloudinaryConverter
 {
-
     protected static $config = null;
 
     /**
@@ -24,43 +23,44 @@ class CloudinaryConverter
      * @var array|Collection
      */
     protected $cloudinary_params = [
-        'angle'                => 'a',
-        'aspect_ratio'         => 'ar',
-        'background'           => 'b',
-        'border'               => 'bo',
-        'crop'                 => 'c',
-        'color'                => 'co',
-        'dpr'                  => 'dpr',
-        'duration'             => 'du',
-        'effect'               => 'e',
-        'end_offset'           => 'eo',
-        'flags'                => 'fl',
-        'height'               => 'h',
-        'overlay'              => 'l',
-        'opacity'              => 'o',
-        'quality'              => 'q',
-        'radius'               => 'r',
-        'start_offset'         => 'so',
+        'angle' => 'a',
+        'aspect_ratio' => 'ar',
+        'background' => 'b',
+        'border' => 'bo',
+        'crop' => 'c',
+        'color' => 'co',
+        'dpr' => 'dpr',
+        'duration' => 'du',
+        'effect' => 'e',
+        'end_offset' => 'eo',
+        'flags' => 'fl',
+        'height' => 'h',
+        'overlay' => 'l',
+        'opacity' => 'o',
+        'quality' => 'q',
+        'radius' => 'r',
+        'start_offset' => 'so',
         'named_transformation' => 't',
-        'underlay'             => 'u',
-        'video_codec'          => 'vc',
-        'width'                => 'w',
-        'x'                    => 'x',
-        'y'                    => 'y',
-        'zoom'                 => 'z',
-        'audio_codec'          => 'ac',
-        'audio_frequency'      => 'af',
-        'bit_rate'             => 'br',
-        'color_space'          => 'cs',
-        'default_image'        => 'd',
-        'delay'                => 'dl',
-        'density'              => 'dn',
-        'fetch_format'         => 'f',
-        'gravity'              => 'g',
-        'prefix'               => 'p',
-        'page'                 => 'pg',
-        'video_sampling'       => 'vs',
-        'progressive'          => 'fl_progressive',
+        'underlay' => 'u',
+        'video_codec' => 'vc',
+        'width' => 'w',
+        'x' => 'x',
+        'y' => 'y',
+        'zoom' => 'z',
+        'audio_codec' => 'ac',
+        'audio_frequency' => 'af',
+        'bit_rate' => 'br',
+        'color_space' => 'cs',
+        'default_image' => 'd',
+        'delay' => 'dl',
+        'density' => 'dn',
+        'fetch_format' => 'f',
+        'format' => 'f',
+        'gravity' => 'g',
+        'prefix' => 'p',
+        'page' => 'pg',
+        'video_sampling' => 'vs',
+        'progressive' => 'fl_progressive',
     ];
 
     /**
@@ -112,18 +112,17 @@ class CloudinaryConverter
 
     public function hasValidConfiguration()
     {
-        return
-            $this->configuration->has('cloud_name') &&
-            $this->configuration->has('cloudinary_upload_url');
+        return $this->configuration->has('cloud_name') && $this->configuration->has('cloudinary_upload_url');
     }
 
     public function baseUrl($item)
     {
-        return
-        Str::ensureRight($this->configuration->get('cloudinary_upload_url'), '/').
-        Str::ensureRight($this->configuration->get('cloud_name'), '/').
-        $this->getAssetType().'/'.
-        $this->getDeliveryType().'/';
+        return Str::ensureRight($this->configuration->get('cloudinary_upload_url'), '/') .
+            Str::ensureRight($this->configuration->get('cloud_name'), '/') .
+            $this->getAssetType() .
+            '/' .
+            $this->getDeliveryType() .
+            '/';
     }
 
     /**
@@ -155,12 +154,16 @@ class CloudinaryConverter
         if ($item instanceof AssetsAsset) {
             return $item;
         }
-        
+
         if ($asset = Asset::findByUrl(Str::ensureLeft($item, '/'))) {
             return $asset;
         }
 
-        throw new ItemNotFoundException('Asset not found for '.gettype($item));
+        if ($asset = Asset::find($item)) {
+            return $asset;
+        }
+
+        throw new ItemNotFoundException('Asset not found for ' . gettype($item));
     }
 
     private function getDeliveryType()
@@ -176,6 +179,7 @@ class CloudinaryConverter
      */
     public function generateCloudinaryUrl($item)
     {
+        $item = $this->getAsset($item);
         $url = $this->normalizeItem($item);
         $manipulation_params = $this->getManipulationParams($item);
         $meta_params = $this->getMetaParams($item);
@@ -185,12 +189,13 @@ class CloudinaryConverter
         // Transformations.
         if ($this->hasCombinedManipulationParams()) {
             $transformations_slug = $this->buildTransformationSlug($combined_params);
-            if (! empty($transformations_slug)) {
+
+            if (!empty($transformations_slug)) {
                 $url = "{$transformations_slug}/{$url}";
             }
         }
 
-        return $this->baseUrl($item).$url;
+        return $this->baseUrl($item) . $url;
     }
 
     private function hasCombinedManipulationParams()
@@ -206,8 +211,8 @@ class CloudinaryConverter
         if ($item->get('focus')) {
             [$x_percentage, $y_percentage, $zoom] = explode('-', $item->get('focus'));
 
-            $x = floor($x_percentage / 100 * $this->getOriginalWidth($item));
-            $y = floor($y_percentage / 100 * $this->getOriginalHeight($item));
+            $x = floor(($x_percentage / 100) * $this->getOriginalWidth($item));
+            $y = floor(($y_percentage / 100) * $this->getOriginalHeight($item));
             $zoom = floor($zoom * 10) / 10;
 
             $params->put('x', $x);
@@ -229,7 +234,7 @@ class CloudinaryConverter
         $params = collect();
 
         foreach ($this->params as $param => $value) {
-            if (! in_array($param, ['src', 'id', 'path', 'tag', 'alt'])) {
+            if (!in_array($param, ['src', 'id', 'path', 'tag', 'alt'])) {
                 $params->put($param, $value);
             }
         }
@@ -252,7 +257,7 @@ class CloudinaryConverter
         $width = $this->getOriginalWidth($item);
         $height = $this->getOriginalHeight($item);
 
-        if (! $width || ! $height) {
+        if (!$width || !$height) {
             return 1;
         }
 
@@ -263,7 +268,8 @@ class CloudinaryConverter
     {
         $width = (int) $this->getManipulationParams()->get('width');
         $height = (int) $this->getManipulationParams()->get('height');
-        $aspect_ratio = (int) $this->getManipulationParams()->get('aspect_ratio') ?: $this->getOriginalAspectRatio($item);
+        $aspect_ratio =
+            (int) $this->getManipulationParams()->get('aspect_ratio') ?: $this->getOriginalAspectRatio($item);
 
         if ($width && $height) {
             return [$width, $height];
@@ -316,28 +322,35 @@ class CloudinaryConverter
      */
     public function buildTransformationSlug($args = null)
     {
-        if (! $args || ! $args instanceof Collection) {
+        if (!$args || !$args instanceof Collection) {
             return '';
         }
 
         $default_transformations = $this->getDefaultTransformationByType($this->getAssetType());
         $args = collect($default_transformations)->merge($args);
 
-        $slug = $args->map(function ($value, $key) {
-            if ($this->cloudinary_params->has($key) && $this->isValidCloudinaryParam($this->cloudinary_params->get($key), $value)) {
-                switch ($key) {
-                    case 'progressive':
-                        if (true === $value) {
-                            return $this->cloudinary_params->get($key);
-                        } else {
-                            return $this->cloudinary_params->get($key).':'.$value;
-                        }
-                        break;
-                    default:
-                        return $this->cloudinary_params->get($key).'_'.$value;
+        $slug = $args
+            ->map(function ($value, $key) {
+                if (
+                    $this->cloudinary_params->has($key) &&
+                    $this->isValidCloudinaryParam($this->cloudinary_params->get($key), $value)
+                ) {
+                    switch ($key) {
+                        case 'progressive':
+                            if (true === $value) {
+                                return $this->cloudinary_params->get($key);
+                            } else {
+                                return $this->cloudinary_params->get($key) . ':' . $value;
+                            }
+                            break;
+                        default:
+                            return $this->cloudinary_params->get($key) . '_' . $value;
+                    }
+                } else {
+                    Log::warning('Unknown Cloudinary parameter [' . $key . '] for asset ');
                 }
-            }
-        });
+            })
+            ->filter();
 
         return $slug->implode(',');
     }
