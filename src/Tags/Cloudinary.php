@@ -10,8 +10,11 @@ use TFD\Cloudinary\Interfaces\CloudinaryInterface;
 
 class Cloudinary extends Tags implements CloudinaryInterface
 {
-
     protected $converter;
+
+    public static function resetStaticState()
+    {
+    }
 
     public function __construct(CloudinaryConverter $converter)
     {
@@ -41,25 +44,24 @@ class Cloudinary extends Tags implements CloudinaryInterface
      */
     public function wildcard()
     {
-        if (! $this->converter->hasValidConfiguration()) {
+        if (!$this->converter->hasValidConfiguration()) {
             return false;
         }
 
         $tag = explode(':', $this->tag, 2)[1];
         $item = $this->context->value($tag);
-        
+
         if ($this->isPair) {
             return $this->generate($item);
         }
-        
+
         try {
             $this->converter->setAssetType($item);
         } catch (ItemNotFoundException $e) {
             Log::error($e->getMessage());
-            
+
             return '';
         }
-
         return $this->output($this->converter->generateCloudinaryUrl($item));
     }
 
@@ -70,6 +72,26 @@ class Cloudinary extends Tags implements CloudinaryInterface
      */
     public function index()
     {
+        if (!$this->converter->hasValidConfiguration()) {
+            return false;
+        }
+
+        if (!($src = $this->params->get('src'))) {
+            Log::error('Cloudinary parameter "src" is empty');
+            return false;
+        } else {
+            $item = $this->converter->getAsset($src);
+
+            try {
+                $this->converter->setAssetType($item);
+            } catch (ItemNotFoundException $e) {
+                Log::error($e->getMessage());
+
+                return '';
+            }
+            return $this->output($this->converter->generateCloudinaryUrl($item));
+        }
+
         return false;
     }
 
@@ -86,23 +108,25 @@ class Cloudinary extends Tags implements CloudinaryInterface
 
         $items = is_iterable($items) ? collect($items) : collect([$items]);
 
-        return $items->map(function ($item) {
-            try {
-                $this->converter->setAssetType($item);
-            } catch (ItemNotFoundException $e) {
-                Log::error($e->getMessage());
-                
-                return '';
-            }
-            
-            $data = ['url' => $this->converter->generateCloudinaryUrl($item)];
-            [$width, $height] = $this->converter->getFinalDimensions($item);
+        return $items
+            ->map(function ($item) {
+                try {
+                    $this->converter->setAssetType($item);
+                } catch (ItemNotFoundException $e) {
+                    Log::error($e->getMessage());
 
-            $data['width'] = $width;
-            $data['height'] = $height;
+                    return '';
+                }
 
-            return $data;
-        })->all();
+                $data = ['url' => $this->converter->generateCloudinaryUrl($item)];
+                [$width, $height] = $this->converter->getFinalDimensions($item);
+
+                $data['width'] = $width;
+                $data['height'] = $height;
+
+                return $data;
+            })
+            ->all();
     }
 
     /**
@@ -114,9 +138,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
     private function output($url)
     {
         if ($this->isPair) {
-            return $this->parse(
-                compact('url', 'width', 'height')
-            );
+            return $this->parse(compact('url', 'width', 'height'));
         }
         if ($this->params->bool('tag')) {
             return "<img src=\"$url\" alt=\"{$this->params->get('alt')}\" />";
