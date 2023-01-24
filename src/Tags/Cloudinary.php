@@ -4,6 +4,7 @@ namespace TFD\Cloudinary\Tags;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ItemNotFoundException;
+use Statamic\Tags\Glide;
 use Statamic\Tags\Tags;
 use TFD\Cloudinary\Converter\CloudinaryConverter;
 use TFD\Cloudinary\Interfaces\CloudinaryInterface;
@@ -11,6 +12,7 @@ use TFD\Cloudinary\Interfaces\CloudinaryInterface;
 class Cloudinary extends Tags implements CloudinaryInterface
 {
     protected $converter;
+    private $glide;
 
     public static function resetStaticState()
     {
@@ -33,6 +35,22 @@ class Cloudinary extends Tags implements CloudinaryInterface
         $this->converter->setParams($parameters);
     }
 
+    public function getGlideFallback()
+    {
+        if (!$this->glide) {
+            $this->glide = new Glide();
+            $this->glide->setProperties([
+                'parser' => $this->parser,
+                'content' => $this->content,
+                'context' => $this->context,
+                'params' => $this->params,
+                'tag' => $this->tag,
+                'tag_method' => $this->method,
+            ]);
+        }
+        return $this->glide;
+    }
+
     /**
      * Maps to {{ cloudinary:[field] }}.
      *
@@ -45,7 +63,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
     public function wildcard()
     {
         if (!$this->converter->hasValidConfiguration()) {
-            return false;
+            return $this->getGlideFallback()->wildcard();
         }
 
         $tag = explode(':', $this->tag, 2)[1];
@@ -60,7 +78,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
         } catch (ItemNotFoundException $e) {
             Log::error($e->getMessage());
 
-            return '';
+            return $this->getGlideFallback()->wildcard();
         }
         return $this->output($this->converter->generateCloudinaryUrl($item));
     }
@@ -73,7 +91,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
     public function index()
     {
         if (!$this->converter->hasValidConfiguration()) {
-            return false;
+            return $this->getGlideFallback()->index();
         }
 
         if (!($src = $this->params->get('src'))) {
@@ -87,12 +105,12 @@ class Cloudinary extends Tags implements CloudinaryInterface
             } catch (ItemNotFoundException $e) {
                 Log::error($e->getMessage());
 
-                return '';
+                return $this->getGlideFallback()->index();
             }
             return $this->output($this->converter->generateCloudinaryUrl($item));
         }
 
-        return false;
+        return $this->getGlideFallback()->index();
     }
 
     /**
