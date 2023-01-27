@@ -55,7 +55,6 @@ class CloudinaryConverter
         'delay' => 'dl',
         'density' => 'dn',
         'fetch_format' => 'f',
-        'format' => 'f',
         'gravity' => 'g',
         'prefix' => 'p',
         'page' => 'pg',
@@ -112,7 +111,10 @@ class CloudinaryConverter
 
     public function hasValidConfiguration()
     {
-        return $this->configuration->has('cloud_name') && $this->configuration->has('cloudinary_upload_url');
+        return $this->configuration->has('cloud_name') &&
+            $this->configuration->get('cloud_name') &&
+            $this->configuration->has('cloudinary_upload_url') &&
+            $this->configuration->get('cloudinary_upload_url');
     }
 
     public function baseUrl($item)
@@ -234,13 +236,41 @@ class CloudinaryConverter
         $params = collect();
 
         foreach ($this->params as $param => $value) {
-            if ($param === 'square') {
-                $params->put('width', $value);
-                $params->put('aspect_ratio', '1:1');
-                break;
-            }
             if (!in_array($param, ['src', 'id', 'path', 'tag', 'alt'])) {
-                $params->put($param, $value);
+                switch ($param) {
+                    case 'format':
+                        $params->put('fetch_format', $value);
+                        break;
+
+                    case 'square':
+                        $params->put('width', $value);
+                        $params->put('aspect_ratio', '1:1');
+                        break;
+
+                    case 'fit':
+                        switch ($value) {
+                            case 'crop_focal':
+                                $params->put('crop', 'fill');
+                                break;
+
+                            case 'contain':
+                                $params->put('crop', 'fit');
+                                break;
+
+                            case 'max':
+                                $params->put('crop', 'limit');
+                                break;
+
+                            case 'stretch':
+                                $params->put('crop', 'scale');
+                                break;
+                        }
+                        break;
+
+                    default:
+                        $params->put($param, $value);
+                        break;
+                }
             }
         }
 
@@ -333,6 +363,10 @@ class CloudinaryConverter
 
         $default_transformations = $this->getDefaultTransformationByType($this->getAssetType());
         $args = collect($default_transformations)->merge($args);
+
+        if ($args->get('gravity') && $args->get('crop') === 'fit') {
+            $args->forget('gravity');
+        }
 
         $slug = $args
             ->map(function ($value, $key) {
