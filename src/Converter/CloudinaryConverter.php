@@ -111,7 +111,10 @@ class CloudinaryConverter
 
     public function hasValidConfiguration()
     {
-        return $this->configuration->has('cloud_name') && $this->configuration->has('cloudinary_upload_url');
+        return $this->configuration->has('cloud_name') &&
+            $this->configuration->get('cloud_name') &&
+            $this->configuration->has('cloudinary_upload_url') &&
+            $this->configuration->get('cloudinary_upload_url');
     }
 
     public function baseUrl($item)
@@ -360,6 +363,10 @@ class CloudinaryConverter
 
         $default_transformations = $this->getDefaultTransformationByType($this->getAssetType());
         $args = collect($default_transformations)->merge($args);
+
+        if ($args->get('gravity') && $args->get('crop') === 'fit') {
+            $args->forget('gravity');
+        }
 
         $slug = $args
             ->map(function ($value, $key) {
