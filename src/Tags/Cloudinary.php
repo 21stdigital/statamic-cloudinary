@@ -37,6 +37,24 @@ class Cloudinary extends Tags implements CloudinaryInterface
 
     public function getGlideFallback()
     {
+        if ($this->params->has('aspect_ratio')) {
+            $aspect_ratio = $this->params->get('aspect_ratio');
+            $this->params->forget('aspect_ratio');
+            if (str_contains($aspect_ratio, ':')) {
+                [$ratio_width, $ratio_height] = explode(':', $aspect_ratio);
+                $aspect_ratio = $ratio_width / $ratio_height;
+            }
+            if ($this->params->has('width')) {
+                $this->params->put('height', $this->params->get('width') / $aspect_ratio);
+            } elseif ($this->params->has('height')) {
+                $this->params->put('width', $this->params->get('height') * $aspect_ratio);
+            }
+        }
+
+        if ($this->params->get('format') === 'auto') {
+            $this->params->put('format', 'jpg');
+        }
+
         if (!$this->glide) {
             $this->glide = new Glide();
             $this->glide->setProperties([
