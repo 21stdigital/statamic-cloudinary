@@ -85,6 +85,10 @@ class Cloudinary extends Tags implements CloudinaryInterface
         }
 
         $tag = explode(':', $this->tag, 2)[1];
+        if ($tag === 'ken_burns' || $tag === 'kenburns') {
+            return $this->kenBurns();
+        }
+
         $item = $this->context->value($tag);
 
         if ($this->isPair) {
@@ -126,6 +130,37 @@ class Cloudinary extends Tags implements CloudinaryInterface
                 return $this->getGlideFallback()->index();
             }
             return $this->output($this->converter->generateCloudinaryUrl($item));
+        }
+
+        return $this->getGlideFallback()->index();
+    }
+
+
+    /**
+     * The {{ cloudinary:ken_burns }} tag.
+     *
+     * @return string|array
+     */
+    public function kenBurns()
+    {
+        if (!$this->converter->hasValidConfiguration()) {
+            return $this->getGlideFallback()->index();
+        }
+
+        if (!($src = $this->params->get('src'))) {
+            Log::error('Cloudinary parameter "src" is empty');
+            return false;
+        } else {
+            $item = $this->converter->getAsset($src);
+
+            try {
+                $this->converter->setAssetType($item);
+            } catch (ItemNotFoundException $e) {
+                Log::error($e->getMessage());
+
+                return $this->getGlideFallback()->index();
+            }
+            return $this->output($this->converter->generateKenBurnsUrl($item));
         }
 
         return $this->getGlideFallback()->index();
