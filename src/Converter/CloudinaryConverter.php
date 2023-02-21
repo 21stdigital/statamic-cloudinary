@@ -199,6 +199,23 @@ class CloudinaryConverter
 
         return $this->baseUrl($item) . $url;
     }
+    /**
+     * The URL generation.
+     *
+     * @param  string $item  Either the ID or path of the image.
+     * @return string
+     */
+    public function generateKenBurnsUrl($item)
+    {
+        $item = $this->getAsset($item);
+        $url = $this->normalizeItem($item);
+        $url = str_replace(['.jpg', '.jpeg', '.png'], '.mp4', $url);
+        $transformations_slug = "q_auto,w_1920/e_zoompan:du_5;from_(g_auto;zoom_4);to_(g_auto;zoom_1.6)/e_boomerang/q_auto";
+
+        $url = "{$transformations_slug}/{$url}";
+
+        return $this->baseUrl($item) . $url;
+    }
 
     private function hasCombinedManipulationParams()
     {
