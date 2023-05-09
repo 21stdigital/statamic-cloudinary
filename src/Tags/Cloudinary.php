@@ -117,8 +117,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
         }
 
         if (!($src = $this->params->get('src'))) {
-            Log::error('Cloudinary parameter "src" is empty');
-            return false;
+            return $this->sourceIsEmptyError();
         } else {
             $item = $this->converter->getAsset($src);
 
@@ -148,8 +147,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
         }
 
         if (!($src = $this->params->get('src'))) {
-            Log::error('Cloudinary parameter "src" is empty');
-            return false;
+            return $this->sourceIsEmptyError();
         } else {
             $item = $this->converter->getAsset($src);
 
@@ -216,5 +214,16 @@ class Cloudinary extends Tags implements CloudinaryInterface
         }
 
         return $url;
+    }
+
+    /**
+     * Error Log for src is empty.
+     *
+     * @return bool
+     */
+    private function sourceIsEmptyError()
+    {
+        Log::error("Cloudinary parameter \"src\" is empty | Context: field_id:[{$this->context['id']}], src:[{$this->context['src']}], page_id:[{$this->context['page']->id}]");
+        return false;
     }
 }
