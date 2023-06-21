@@ -210,7 +210,8 @@ class CloudinaryConverter
         $item = $this->getAsset($item);
         $url = $this->normalizeItem($item);
         $url = str_replace(['.jpg', '.jpeg', '.png'], '.mp4', $url);
-        $transformations_slug = "q_auto,w_1920/e_zoompan:du_5;from_(g_auto;zoom_4);to_(g_auto;zoom_1.6)/e_boomerang/q_auto";
+        $transformations_slug =
+            'q_auto,w_1920/e_zoompan:du_5;from_(g_auto;zoom_4);to_(g_auto;zoom_1.6)/e_boomerang/q_auto';
 
         $url = "{$transformations_slug}/{$url}";
 
@@ -385,6 +386,18 @@ class CloudinaryConverter
             $args->forget('gravity');
         }
 
+        $fetch_format = null;
+        if ($args->get('fetch_format')) {
+            $fetch_format = $this->cloudinary_params->get('fetch_format') . '_' . $args->get('fetch_format');
+            $args->forget('fetch_format');
+        }
+
+        $quality = null;
+        if ($args->get('quality')) {
+            $quality = $this->cloudinary_params->get('quality') . '_' . $args->get('quality');
+            $args->forget('quality');
+        }
+
         $slug = $args
             ->map(function ($value, $key) {
                 if (
@@ -408,7 +421,15 @@ class CloudinaryConverter
             })
             ->filter();
 
-        return $slug->implode(',');
+        $transformation_slug = $slug->implode(urlencode(','));
+        if ($quality) {
+            $transformation_slug = $transformation_slug . '/' . $quality;
+        }
+        if ($fetch_format) {
+            $transformation_slug = $transformation_slug . '/' . $fetch_format;
+        }
+
+        return $transformation_slug;
     }
 
     public function getDefaultTransformationByType($type)
