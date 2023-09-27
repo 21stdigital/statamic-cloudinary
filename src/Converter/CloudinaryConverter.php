@@ -226,6 +226,7 @@ class CloudinaryConverter
     private function getMetaParams($item)
     {
         $params = collect();
+        $manipulation_params = $this->getManipulationParams($item);
 
         // Set focus related parameters.
         if ($item->get('focus')) {
@@ -234,6 +235,20 @@ class CloudinaryConverter
             $x = floor(($x_percentage / 100) * $this->getOriginalWidth($item));
             $y = floor(($y_percentage / 100) * $this->getOriginalHeight($item));
             $zoom = floor($zoom * 10) / 10;
+
+            $params->put('x', $x);
+            $params->put('y', $y);
+            $params->put('zoom', $zoom);
+            $params->put('gravity', 'xy_center');
+        } else if ($manipulation_params->has('crop') && $manipulation_params->get('crop') === 'fill') {
+            /**
+             * When using `fit="crop_focal"` in statamic and NOT defining a focal point, the asset is cropped by glide from the center point.
+             * In contrary, when using cloudinary, this is not the case.
+             * The following code replicates this behavior.
+             */
+            $x = floor(0.5 * $this->getOriginalWidth($item));
+            $y = floor(0.5 * $this->getOriginalHeight($item));
+            $zoom = 1;
 
             $params->put('x', $x);
             $params->put('y', $y);
