@@ -18,6 +18,11 @@ class CloudinaryConverter
     protected $configuration;
 
     /**
+     * @var array
+     */
+    protected $params;
+
+    /**
      * @see https://cloudinary.com/documentation/transformation_reference
      *
      * @var array|Collection
