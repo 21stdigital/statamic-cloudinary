@@ -101,6 +101,7 @@ class CloudinaryConverter
             'notification_url' => config('statamic.cloudinary.notification_url'),
             'cloudinary_url' => config('statamic.cloudinary.url'),
             'cloudinary_delivery_type' => config('statamic.cloudinary.delivery_type'),
+            'external_url_prefix' => config('statamic.cloudinary.external_url_prefix'),
         ]);
     }
 
@@ -373,6 +374,10 @@ class CloudinaryConverter
         }
 
         $item = Str::ensureLeft(Str::removeLeft($item, '/'), $this->configuration->get('auto_mapping_folder'));
+
+        if ($this->configuration->get('external_url_prefix')) {
+            $item = Str::replace(Str::ensureRight($this->configuration->get('external_url_prefix'), '/'), '', $item);
+        }
 
         return $item;
     }
