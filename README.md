@@ -67,6 +67,33 @@ CLOUDINARY_AUTO_MAPPING_FOLDER=xxx
 CLOUDINARY_URL=cloudinary://xxx:xxx@xxx
 ```
 
+#### 3.1. Using an External URL
+
+If your assets are served through an external URL, you need to set an additional configuration option, either in the `cloudinary.php` config file:
+
+```php
+<?php
+
+return [
+  // ...
+  'external_url_prefix' => env('CLOUDINARY_EXTERNAL_URL_PREFIX', 'https://my-external-asset-url.com'),
+];
+```
+
+... or in the `.env` file:
+
+```bash
+CLOUDINARY_EXTERNAL_URL_PREFIX=https://my-external-asset-url.com
+```
+
+For example, if you are using DigitalOcean Spaces storage and your assets are served from this URL:  
+`https://my-project.us1.digitaloceanspaces.com/website/image.jpg`, the external URL consists of two parts:
+- `https://my-project.us1.digitaloceanspaces.com` - The DigitalOcean base URL
+- `/website` - The root folder in DigitalOcean
+
+The actual value you need to set in the config or .env file would be:  
+`CLOUDINARY_EXTERNAL_URL_PREFIX=https://my-project.us1.digitaloceanspaces.com/website/`
+
 ### 4. Use the cloudinary tag
 
 You are now ready to use the cloudinary tag inside your views.

@@ -8,6 +8,8 @@ return [
 
     'auto_mapping_folder' => env('CLOUDINARY_AUTO_MAPPING_FOLDER', ''),
 
+    'external_url_prefix' => env('CLOUDINARY_EXTERNAL_URL_PREFIX', ''),
+
     'api_key' => env('CLOUDINARY_API_KEY', ''),
 
     'api_secret' => env('CLOUDINARY_API_SECRET', ''),
