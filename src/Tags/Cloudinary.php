@@ -223,7 +223,18 @@ class Cloudinary extends Tags implements CloudinaryInterface
      */
     private function sourceIsEmptyError()
     {
-        Log::error("Cloudinary parameter \"src\" is empty | Context: field_id:[{$this->context['id']}], src:[{$this->context['src']}], page_id:[{$this->context['page']->id}]");
+        $additionalInformation = [];
+
+        try {
+            $additionalInformation[] = 'field_id:[' . $this->context['id'] . ']';
+            $additionalInformation[] = 'page_id:[' . $this->context['page']->id . ']';
+        } catch (\Throwable $th) {
+
+        }
+
+        $additionalInformation = implode(', ', $additionalInformation);
+
+        Log::error("Cloudinary parameter \"src\" is empty | Context: $additionalInformation");
         return false;
     }
 }
