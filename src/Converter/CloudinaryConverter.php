@@ -3,6 +3,7 @@
 namespace TFD\Cloudinary\Converter;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Statamic\Support\Str;
 use Statamic\Assets\Asset as AssetsAsset;
 use Statamic\Facades\Asset;
