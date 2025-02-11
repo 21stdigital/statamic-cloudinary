@@ -341,6 +341,7 @@ class CloudinaryConverter
 
     public function getFinalDimensions($item)
     {
+        $item = $this->getAsset($item);
         $width = (int) $this->getManipulationParams()->get('width');
         $height = (int) $this->getManipulationParams()->get('height');
         $aspect_ratio =
