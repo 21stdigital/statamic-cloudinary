@@ -4,6 +4,11 @@
       "TFD\\Cloudinary\\": "src"
     }
   },
+  "config": {
+    "allow-plugins": {
+      "pixelfear/composer-dist-plugin": true
+    }
+  },
   "extra": {
     "laravel": {
       "providers": [
@@ -18,11 +23,11 @@
   "license": "MIT",
   "name": "tfd/statamic-cloudinary",
   "require": {
-    "statamic/cms": "^3.1 || ^4.0 || ^5.0 || ^6.0"
+    "statamic/cms": "^5.73.11 || ^6.4"
   },
   "require-dev": {
-    "friendsofphp/php-cs-fixer": "^2",
-    "phpunit/phpunit": "^9.3",
+    "friendsofphp/php-cs-fixer": "^3.88",
+    "phpunit/phpunit": "^10.5 || ^11.5",
     "squizlabs/php_codesniffer": "^3.6"
   },
   "scripts": {
