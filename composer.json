@@ -23,7 +23,7 @@
   "license": "MIT",
   "name": "tfd/statamic-cloudinary",
   "require": {
-    "statamic/cms": "^5.73.11 || ^6.4"
+    "statamic/cms": "^5.73.11 || ^6.6.2"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.88",

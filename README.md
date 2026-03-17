@@ -18,7 +18,7 @@ Run the following command from your project root:
 composer require tfd/statamic-cloudinary
 ```
 
-Supported Statamic versions: `5.73.11+` and `6.4+`.
+Supported Statamic versions: `5.73.11+` and `6.6.2+`.
 
 ## How to Use
 
