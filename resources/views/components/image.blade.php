@@ -1,1 +1,0 @@
-<img src="{{ $url }}" alt="{{ $alt ?? '' }}" width="{{ $width }}" height="{{ $height }}">
