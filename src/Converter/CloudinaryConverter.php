@@ -371,7 +371,7 @@ class CloudinaryConverter
         $height = (int) $this->getManipulationParams()->get('height');
         $aspect_ratio = $this->resolveAspectRatio(
             $this->getManipulationParams()->get('aspect_ratio'),
-            $item
+            $item,
         );
 
         if ($width !== 0 && $height !== 0) {
@@ -414,8 +414,7 @@ class CloudinaryConverter
 
     private function normalizeItem(AssetsAsset $item): string
     {
-        $path = ltrim($item->path(), '/');
-
+        $path = ltrim($item->absoluteUrl(), '/');
         $path = Str::ensureLeft($path, (string) $this->configuration->get('auto_mapping_folder'));
 
         if ($this->configuration->get('external_url_prefix')) {
