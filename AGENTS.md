@@ -1,209 +1,211 @@
 # AGENTS.md
 
-Anleitung fuer Coding-Agents in `tfd/statamic-cloudinary`.
+Guidance for coding agents working in `tfd/statamic-cloudinary`.
 
-## Projektueberblick
+## Project Overview
 
-- Dieses Repository ist ein PHP-Paket fuer Statamic/Laravel.
-- Paketname: `tfd/statamic-cloudinary`.
-- PSR-4-Root-Namespace: `TFD\Cloudinary\`, gemappt auf `src/`.
-- Der Hauptcode liegt in `src/`.
-- Die Laufzeitkonfiguration liegt in `config/cloudinary.php`.
-- Blade-Views liegen in `resources/views/`.
-- Es gibt aktuell keine Frontend-Build-Pipeline fuer dieses Addon.
-- Testsuite: Pest unter `tests/` (Orchestra Testbench), z. B. `tests/Unit/CloudinaryConverterTest.php`.
+- This repository is a PHP package for Statamic/Laravel.
+- Package name: `tfd/statamic-cloudinary`.
+- PSR-4 root namespace: `TFD\Cloudinary\`, mapped to `src/`.
+- Main source code lives in `src/`.
+- Package runtime config lives in `config/cloudinary.php` and is published to `config/statamic/cloudinary.php`.
+- Blade views live in `resources/views/`.
+- There is no frontend build pipeline for this addon.
+- Tests use Pest with Orchestra Testbench in `tests/`, for example `tests/Unit/CloudinaryConverterTest.php`.
 
-## Quellen Fuer Agent-Regeln
+## Rule Sources
 
-- Vor dieser Datei gab es kein Repository-weites `AGENTS.md`.
-- Es wurde keine `.cursorrules`-Datei gefunden.
-- Es wurden keine Dateien in `.cursor/rules/` gefunden.
-- Es wurde keine `.github/copilot-instructions.md` gefunden.
-- Falls spaeter solche Dateien hinzukommen, gelten sie als zusaetzliche Anweisungen.
+- Before this file, there was no repository-wide `AGENTS.md`.
+- No `.cursorrules` file was found.
+- No files were found in `.cursor/rules/`.
+- No `.github/copilot-instructions.md` file was found.
+- If any of these files are added later, treat them as additional instructions.
 
-## Umgebung Und Tooling
+## Environment And Tooling
 
-- Paketmanager: Composer.
-- Formatter/Linter: PHP CS Fixer ueber `.php-cs-fixer.php`.
-- Dev-Dependencies: u. a. `pestphp/pest`, `orchestra/testbench`, `mockery/mockery`, `phpunit/phpunit`.
-- Das Paket zielt auf Statamic `^5.73.11 || ^6.4`.
-- Laravel-Helper wie `config()`, `resource_path()` und `collect()` koennen vorausgesetzt werden.
+- Package manager: Composer.
+- Formatter/linter: PHP CS Fixer via `.php-cs-fixer.php`.
+- Dev dependencies include `pestphp/pest`, `orchestra/testbench`, `mockery/mockery`, and `phpunit/phpunit`.
+- The package targets Statamic `^5.73.11 || ^6.4`.
+- Laravel helpers such as `config()`, `resource_path()`, and `collect()` can be assumed.
 
-## Setup-Befehle
+## Setup Commands
 
-Abhaengigkeiten installieren:
+Install dependencies:
 
 ```bash
 composer install
 ```
 
-Nur Produktions-Abhaengigkeiten installieren:
+Install production dependencies only:
 
 ```bash
 composer install --no-dev
 ```
 
-Composer-Autoload nach Namespace- oder Dateiaenderungen aktualisieren:
+Refresh Composer autoloads after namespace or file changes:
 
 ```bash
 composer dump-autoload
 ```
 
-## Build-Befehle
+## Build Commands
 
-- Es gibt keinen dedizierten Build-Schritt fuer dieses Paket.
-- `composer install` und `composer dump-autoload` sind die relevanten Setup-/Build-aehnlichen Befehle.
-- Fuer eine Paketvalidierung kann Composer selbst verwendet werden:
+- There is no dedicated build step for this package.
+- `composer install` and `composer dump-autoload` are the closest setup/build-like commands.
+- For package validation, use:
 
 ```bash
 composer validate
 ```
 
-## Lint- Und Formatierungsbefehle
+## Linting And Formatting
 
-Repository-definierter Lint-Befehl:
+Repository lint command:
 
 ```bash
 composer lint
 ```
 
-Das expandiert zu:
+This expands to:
 
 ```bash
 php ./vendor/bin/php-cs-fixer fix -v --config .php-cs-fixer.php
 ```
 
-Sichere Check-only-Variante vor Aenderungen:
+Safe check-only variant:
 
 ```bash
 php ./vendor/bin/php-cs-fixer fix --dry-run --diff -v --config .php-cs-fixer.php
 ```
 
-## Test-Befehle
+## Test Commands
 
-Alle Tests (Pest):
+Run all tests:
 
 ```bash
 composer test
 ```
 
-Entspricht:
+Equivalent command:
 
 ```bash
 ./vendor/bin/pest
 ```
 
-Mit PHPUnit-Filter (Pest nutzt PHPUnit darunter):
+Run filtered tests:
 
 ```bash
 ./vendor/bin/pest --filter=CloudinaryConverter
 ```
 
-Konfiguration: `phpunit.xml` im Repository-Root; `tests/Pest.php` bindet `Tests\TestCase` (Orchestra Testbench) fuer `tests/Unit`.
+Test config lives in `phpunit.xml`; `tests/Pest.php` binds `Tests\TestCase` for `tests/Unit`.
 
-## Dateien Und Verantwortlichkeiten
+## Files And Responsibilities
 
-- `src/ServiceProvider.php`: Paketregistrierung, Publish-Definitionen, Blade-Komponenten, Laden von Views.
-- `src/Converter/CloudinaryConverter.php`: zentrale Transformations- und URL-Generierungslogik.
-- `src/Tags/Cloudinary.php`: Statamic-Tag-Implementierung und Glide-Fallback-Verhalten.
-- `src/Components/Image.php`: Blade-Komponente als Wrapper um den Converter.
-- `src/Interfaces/CloudinaryInterface.php`: kleines gemeinsames Interface.
-- `config/cloudinary.php`: Paket-Defaults und Konfigurationsverdrahtung.
-- `resources/views/components/image.blade.php`: gerendertes Bild-Markup.
+- `src/ServiceProvider.php`: package registration, config merge for `statamic.cloudinary`, publish definitions, view namespace `cloudinary`, Blade component registration.
+- `src/Converter/CloudinaryConverter.php`: core transformation and URL generation logic.
+- `src/Tags/Cloudinary.php`: Statamic tag implementation and Glide fallback behavior.
+- `src/Components/Image.php`: Blade component wrapper around the converter.
+- `src/Interfaces/CloudinaryInterface.php`: small shared interface.
+- `config/cloudinary.php`: package defaults and config wiring.
+- `resources/views/components/cloudinary-image.blade.php`: rendered markup for `<x-cloudinary-image />`.
 
-## Grundsaetzlicher Code-Style
+## Code Style
 
-Orientiere dich zuerst am bestehenden Stil im Repository und lasse das Ergebnis anschliessend von PHP CS Fixer normalisieren.
+Follow the existing repository style first, then normalize with PHP CS Fixer.
 
-- Verwende PSR-4-Namespaces unter `TFD\Cloudinary`.
-- Verwende Short-Array-Syntax: `[]`.
-- Verwende einfache Anfuehrungszeichen, ausser Interpolation oder Escaping machen doppelte Anfuehrungszeichen klarer.
-- Ein Import pro Statement.
-- Imports alphabetisch sortieren.
-- Ungenutzte Imports entfernen.
-- Genau eine Leerzeile nach dem Namespace und nach dem Import-Block.
-- Explizite Sichtbarkeit fuer Methoden und Properties.
-- Moeglichst ein Klassen-Element pro Statement.
-- Dateien mit genau einer abschliessenden Leerzeile beenden.
-- Kein schliessendes `?>` in PHP-Dateien.
+- Use PSR-4 namespaces under `TFD\Cloudinary`.
+- Keep `declare(strict_types=1);` in new or already modernized PHP files.
+- Use short arrays: `[]`.
+- Prefer single quotes unless interpolation or escaping makes double quotes clearer.
+- Use one import per statement.
+- Keep imports alphabetized.
+- Remove unused imports.
+- Leave exactly one blank line after the namespace and after the import block.
+- Use explicit visibility for methods and properties.
+- Prefer one class member per statement.
+- End files with exactly one trailing newline.
+- Do not use a closing `?>` tag in PHP files.
 
 ## Imports
 
-- Framework- und Paketklassen am Dateianfang importieren.
-- Import-Aliasse nur verwenden, wenn Namenskonflikte oder Verwechslungen drohen, z. B. `Asset as AssetsAsset`.
-- Vollqualifizierte Klassennamen im Inline-Code vermeiden, wenn ein `use`-Statement klarer ist.
-- Der Fixer erzwingt keine fuehrenden Import-Slashes und alphabetische Sortierung.
+- Import framework and package classes at the top of the file.
+- Use import aliases only when needed to avoid collisions or confusion, for example `Asset as AssetsAsset`.
+- Avoid inline fully qualified class names when a `use` statement is clearer.
+- The fixer does not enforce leading import slashes and may not guarantee alphabetic ordering on its own.
 
-## Formatierung
+## Formatting
 
-- Die bestehende Einrueckung mit 4 Leerzeichen beibehalten.
-- Klammern und Methodenlayout konsistent zum restlichen Code halten.
-- Leerzeilen nur zwischen logischen Bloecken einsetzen, nicht stapeln.
-- Einfache Delegationsmethoden kompakt halten.
-- Mehrzeilige Arrays verwenden, wenn die Lesbarkeit steigt.
-- Trailing Commas in mehrzeiligen Arrays beibehalten.
-- String-Konkatenation ohne zusaetzliche Leerzeichen um `.` schreiben.
+- Keep 4-space indentation.
+- Match existing brace style and method layout.
+- Use blank lines only between logical blocks.
+- Keep simple delegation methods compact.
+- Use multiline arrays when they improve readability.
+- Keep trailing commas in multiline arrays.
+- Concatenate strings without extra spaces around `.`.
 
-## Typen Und Signaturen
+## Types And Signatures
 
-- Die bestehende Codebasis verwendet nur wenige PHP-Typdeklarationen.
-- Beim Bearbeiten vorhandener Dateien die Kompatibilitaet zum umgebenden Code bewahren.
-- Keine aggressiven Scalar-Type-Hints oder Return-Types ueber das ganze Paket verteilen, sofern nicht alle betroffenen Verwendungen konsistent angepasst werden.
-- Constructor Dependency Injection ist das bevorzugte Muster fuer Services und Komponenten.
-- Bei neuen APIs Typen bevorzugen, wenn sie fuer die unterstuetzte PHP-/Laravel-/Statamic-Matrix offensichtlich sicher sind.
-- `Collection` bewusst einsetzen, wenn eine Methode bereits in Collection-Begriffen arbeitet.
+- The codebase is mixed: older files are looser, newer files use `strict_types`, typed properties, and return types.
+- Preserve compatibility with the surrounding code when editing existing files, but do not remove modern typing from already typed files.
+- Do not add scalar type hints or return types broadly unless all affected usage is updated consistently.
+- Prefer constructor dependency injection for services and components.
+- Prefer types on new APIs when they are clearly safe for the supported PHP/Laravel/Statamic matrix.
+- Use `Collection` deliberately when a method already works in collection terms.
 
-## Benennungskonventionen
+## Naming
 
-- Klassen verwenden PascalCase.
-- Methoden und Properties verwenden camelCase.
-- Config-Keys und Array-Keys verwenden snake_case, wenn sie externe Konfiguration oder Cloudinary-Parameter abbilden.
-- Begriffe an Statamic- und Cloudinary-Terminologie ausrichten: `asset`, `tag`, `transformations`, `delivery_type`, `fetch_format`.
-- Namespace-Ordner sollen den Zweck der Klassen widerspiegeln, z. B. `Tags`, `Components`, `Converter`, `Interfaces`.
+- Classes use PascalCase.
+- Methods and properties use camelCase.
+- Config keys and array keys use snake_case when mirroring external configuration or Cloudinary parameters.
+- Align terminology with Statamic and Cloudinary, such as `asset`, `tag`, `transformations`, `delivery_type`, and `fetch_format`.
+- Namespace directories should reflect intent, for example `Tags`, `Components`, `Converter`, and `Interfaces`.
 
-## Fehlerbehandlung Und Logging
+## Error Handling And Logging
 
-- Wenn moeglich, graceful Fallbacks statt harter Fehler verwenden, insbesondere wenn an Statamic Glide delegiert werden kann.
-- Der bestehende Code faengt `ItemNotFoundException` ab und loggt ueber `Log::error(...)`.
-- Fallback-Pfade intakt lassen, wenn Konfiguration fehlt oder Asset-Lookups fehlschlagen.
-- Logging fuer operative Probleme verwenden, die das Rendering nicht komplett abbrechen sollen.
-- Exceptions nicht stillschweigend schlucken, ausser es gibt einen klaren Grund; wenn Schweigen notwendig ist, Verhalten dokumentieren oder das etablierte Muster beibehalten.
+- Prefer graceful fallbacks over hard failures, especially when delegating to Statamic Glide is possible.
+- Existing code catches `ItemNotFoundException` and logs with `Log::error(...)`.
+- Preserve fallback paths when configuration is missing or asset lookups fail.
+- Use logging for operational problems that should not fully break rendering.
+- Do not silently swallow exceptions unless there is a clear reason and it matches the established pattern.
 
-## Paketspezifische Konventionen
+## Package-Specific Conventions
 
-- Vor der Generierung von Cloudinary-URLs immer die Konfiguration validieren.
-- Das Glide-Fallback in `src/Tags/Cloudinary.php` erhalten, wenn Cloudinary nicht verfuegbar ist.
-- Die Uebersetzung von Parametern zentral in `CloudinaryConverter` halten.
-- Statamic-Asset-IDs, Asset-URLs und gemappte externe URLs als unterstuetzte Inputs behandeln.
-- Publish-Pfade fuer Assets/Views und bestehende Tag-Namen nur aendern, wenn bewusst ein Breaking Change gewollt ist.
+- Always validate configuration before generating Cloudinary URLs.
+- Preserve the Glide fallback in `src/Tags/Cloudinary.php` when Cloudinary is unavailable.
+- Keep parameter translation centralized in `CloudinaryConverter`.
+- Treat Statamic asset IDs, asset URLs, and mapped external URLs as supported inputs.
+- Do not change config/view publish paths, the `cloudinary` view namespace, or existing tag/component names unless a breaking change is intentional.
 
-## Blade- Und View-Konventionen
+## Blade And View Conventions
 
-- Blade-Komponenten-Ausgabe einfach und vorhersagbar halten.
-- Dynamische Werte mit normaler Blade-Escaping-Syntax `{{ }}` ausgeben.
-- Vorbereitete View-Daten bevorzugt in PHP uebergeben, statt Transformationslogik in Blade zu verstecken.
-- HTML-Attribute explizit halten, wenn sie Ausgabedimensionen oder Accessibility beeinflussen.
+- Keep Blade component output simple and predictable.
+- Output dynamic values with normal Blade escaping via `{{ }}`.
+- Prefer preparing view data in PHP rather than hiding transformation logic in Blade.
+- Keep HTML attributes explicit when they affect dimensions or accessibility.
+- The current Blade component is `<x-cloudinary-image />`; keep alias, view path, and docs in sync if it changes.
 
-## Beim Aendern Von Code
+## When Editing Code
 
-- Die kleinstmoegliche Aenderung machen, die das Problem loest.
-- Breite Refactorings vermeiden, ausser die Aufgabe verlangt es.
-- Neue Tests unter `tests/` ablegen; `composer test` ausfuehren (siehe Abschnitt Test-Befehle).
-- Wenn du Formatierung spuerbar veraenderst, anschliessend PHP CS Fixer ausfuehren.
-- Wenn du neue Klassen unter `src/` hinzufuegst, sicherstellen, dass Namespace und Pfad zu PSR-4 passen.
-- `README.md` aktualisieren, wenn sich oeffentliches Verhalten oder Konfiguration aendert.
+- Make the smallest change that solves the problem.
+- Avoid broad refactors unless the task requires them.
+- Add new tests under `tests/` and run `composer test`.
+- If formatting changes materially, run PHP CS Fixer afterward.
+- When adding new classes under `src/`, ensure path and namespace match PSR-4.
+- Update `README.md` when public behavior or configuration changes.
 
-## Worauf Besonders Zu Achten Ist
+## Watchouts
 
-- Einige aktuelle Dateien haben uneinheitliche Abstaende; beim Bearbeiten fixer-konforme Formatierung bevorzugen.
-- `composer lint` veraendert Dateien, weil intern `php-cs-fixer fix` und kein Dry-Run verwendet wird.
-- Nach relevanten Aenderungen `composer test` ausfuehren.
-- Bei Aenderungen an generierten URLs, Fallback-Semantik oder Config-Key-Namen besonders vorsichtig sein.
+- Some files still have inconsistent spacing; prefer fixer-compliant formatting when touching them.
+- `composer lint` modifies files because it runs `php-cs-fixer fix`, not a dry run.
+- Run `composer test` after relevant changes.
+- Be especially careful with generated URLs, fallback semantics, and config key names.
 
-## Empfohlener Agent-Workflow
+## Recommended Workflow
 
-1. Relevante Datei und naheliegende Verwendungen vor dem Editieren lesen.
-2. Eine gezielte Aenderung im Stil bestehender Statamic-/Laravel-Muster vornehmen.
-3. Je nach Situation `composer lint` oder die Dry-Run-Variante ausfuehren.
-4. `composer test` oder gezielt `./vendor/bin/pest --filter=...` ausfuehren.
-5. Verhaltensaenderungen, Fallback-Auswirkungen und Konfigurationsfolgen knapp zusammenfassen.
+1. Read the target file and nearby usages before editing.
+2. Make a focused change that follows existing Statamic/Laravel patterns.
+3. Run `composer lint` or the dry-run variant as appropriate.
+4. Run `composer test` or a focused `./vendor/bin/pest --filter=...` command.
+5. Summarize behavior changes, fallback impact, and config implications briefly.
