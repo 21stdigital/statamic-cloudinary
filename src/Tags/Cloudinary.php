@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
 namespace TFD\Cloudinary\Tags;
 
 use Illuminate\Support\Facades\Log;
@@ -17,7 +16,9 @@ class Cloudinary extends Tags implements CloudinaryInterface
 
     private ?Glide $glide = null;
 
-    public static function resetStaticState() {}
+    public static function resetStaticState()
+    {
+    }
 
     public function __construct(CloudinaryConverter $converter)
     {

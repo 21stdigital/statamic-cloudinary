@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
 namespace TFD\Cloudinary;
 
 use Illuminate\Support\Facades\Blade;
