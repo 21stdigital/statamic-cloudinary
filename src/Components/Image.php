@@ -63,7 +63,18 @@ class Image extends Component implements CloudinaryInterface
                 'height' => $height,
             ]));
 
-            return view('cloudinary::components.cloudinary-image', $viewData->toArray())->render();
+            return view($this->resolveViewName(), $viewData->toArray())->render();
         };
+    }
+
+    private function resolveViewName(): string
+    {
+        $legacyPublishedView = resource_path('views/vendor/cloudinary/components/image.blade.php');
+
+        if (file_exists($legacyPublishedView)) {
+            return 'cloudinary::components.image';
+        }
+
+        return 'cloudinary::components.cloudinary-image';
     }
 }

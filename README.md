@@ -179,7 +179,7 @@ Usage with other parameters.
 />
 ```
 
-There is also a custom Blade component to use Cloudinary in your Blade templates. The `src` attribute is required. If Cloudinary is not configured or `src` is missing, the component outputs nothing.
+There is also a custom Blade component to use Cloudinary in your Blade templates. The `src` attribute is required. If Cloudinary is not configured or `src` is missing, the component outputs nothing. The current component alias is `<x-cloudinary-image />`; the legacy `<x-image />` alias and published `components/image.blade.php` override remain supported for backward compatibility.
 
 ### 5. Available parameters
 

@@ -46,6 +46,7 @@ class ServiceProvider extends AddonServiceProvider
             __DIR__.'/../resources/views' => resource_path('views/vendor/cloudinary'),
         ], 'cloudinary-views');
 
+        Blade::component('image', Image::class);
         Blade::component('cloudinary-image', Image::class);
         $this->loadViewComponentsAs('cloudinary-image', [
             Image::class,
