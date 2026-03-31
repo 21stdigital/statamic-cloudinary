@@ -1,1 +1,1 @@
-<img src="{{ $url }}" alt="{{ $alt ?? '' }}" width="{{ $width }}" height="{{ $height }}">
+@include('cloudinary::components.cloudinary-image')

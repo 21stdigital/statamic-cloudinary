@@ -1,82 +1,40 @@
 <?php
 
+declare(strict_types=1);
 namespace TFD\Cloudinary\Converter;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Statamic\Support\Str;
+use Illuminate\Support\ItemNotFoundException;
 use Statamic\Assets\Asset as AssetsAsset;
 use Statamic\Facades\Asset;
-use Illuminate\Support\ItemNotFoundException;
+use Statamic\Support\Str;
 
 class CloudinaryConverter
 {
-    protected static $config = null;
+    /**
+     * @var Collection<string, mixed>
+     */
+    protected Collection $configuration;
 
     /**
-     * @var Collection
+     * @var array<string, mixed>
      */
-    protected $configuration;
-
-    /**
-     * @var array
-     */
-    protected $params;
+    protected array $params = [];
 
     /**
      * @see https://cloudinary.com/documentation/transformation_reference
      *
-     * @var array|Collection
+     * @var Collection<string, string>
      */
-    protected $cloudinary_params = [
-        'angle' => 'a',
-        'aspect_ratio' => 'ar',
-        'background' => 'b',
-        'border' => 'bo',
-        'crop' => 'c',
-        'color' => 'co',
-        'dpr' => 'dpr',
-        'duration' => 'du',
-        'effect' => 'e',
-        'end_offset' => 'eo',
-        'flags' => 'fl',
-        'height' => 'h',
-        'overlay' => 'l',
-        'opacity' => 'o',
-        'quality' => 'q',
-        'radius' => 'r',
-        'start_offset' => 'so',
-        'named_transformation' => 't',
-        'underlay' => 'u',
-        'video_codec' => 'vc',
-        'width' => 'w',
-        'x' => 'x',
-        'y' => 'y',
-        'zoom' => 'z',
-        'audio_codec' => 'ac',
-        'audio_frequency' => 'af',
-        'bit_rate' => 'br',
-        'color_space' => 'cs',
-        'default_image' => 'd',
-        'delay' => 'dl',
-        'density' => 'dn',
-        'fetch_format' => 'f',
-        'gravity' => 'g',
-        'prefix' => 'p',
-        'page' => 'pg',
-        'video_sampling' => 'vs',
-        'progressive' => 'fl_progressive',
-    ];
+    protected Collection $cloudinary_params;
 
     /**
-     * @var Collection
+     * @var Collection<string, mixed>
      */
-    protected $default_transformations;
+    protected Collection $default_transformations;
 
-    /**
-     * @var string
-     */
-    protected $asset_type;
+    protected string $asset_type = '';
 
     public function __construct()
     {
@@ -85,17 +43,56 @@ class CloudinaryConverter
         $this->setDefaultTransformations();
     }
 
-    protected function setCloudinaryParams()
+    protected function setCloudinaryParams(): void
     {
-        $this->cloudinary_params = collect($this->cloudinary_params);
+        $this->cloudinary_params = collect([
+            'angle' => 'a',
+            'aspect_ratio' => 'ar',
+            'background' => 'b',
+            'border' => 'bo',
+            'crop' => 'c',
+            'color' => 'co',
+            'dpr' => 'dpr',
+            'duration' => 'du',
+            'effect' => 'e',
+            'end_offset' => 'eo',
+            'flags' => 'fl',
+            'height' => 'h',
+            'overlay' => 'l',
+            'opacity' => 'o',
+            'quality' => 'q',
+            'radius' => 'r',
+            'start_offset' => 'so',
+            'named_transformation' => 't',
+            'underlay' => 'u',
+            'video_codec' => 'vc',
+            'width' => 'w',
+            'x' => 'x',
+            'y' => 'y',
+            'zoom' => 'z',
+            'audio_codec' => 'ac',
+            'audio_frequency' => 'af',
+            'bit_rate' => 'br',
+            'color_space' => 'cs',
+            'default_image' => 'd',
+            'delay' => 'dl',
+            'density' => 'dn',
+            'fetch_format' => 'f',
+            'format' => 'f',
+            'gravity' => 'g',
+            'prefix' => 'p',
+            'page' => 'pg',
+            'video_sampling' => 'vs',
+            'progressive' => 'fl_progressive',
+        ]);
     }
 
-    protected function setConfiguration()
+    protected function setConfiguration(): void
     {
         $this->configuration = collect([
             'cloud_name' => config('statamic.cloudinary.cloud_name'),
             'cloudinary_upload_url' => config('statamic.cloudinary.upload_url'),
-            'auto_mapping_folder' => config('statamic.cloudinary.auto_mapping_folder'),
+            'auto_mapping_folder' => Str::finish((string) config('statamic.cloudinary.auto_mapping_folder'), '/'),
             'api_key' => config('statamic.cloudinary.api_key'),
             'api_secret' => config('statamic.cloudinary.api_secret'),
             'upload_preset' => config('statamic.cloudinary.upload_preset'),
@@ -106,41 +103,51 @@ class CloudinaryConverter
         ]);
     }
 
-    protected function setDefaultTransformations()
+    protected function setDefaultTransformations(): void
     {
-        $this->default_transformations = collect(config('statamic.cloudinary.default_transformations'));
+        /** @var array<string, mixed>|null $defaults */
+        $defaults = config('statamic.cloudinary.default_transformations');
+        $this->default_transformations = collect($defaults ?? []);
     }
 
-    public function setParams($params)
+    /**
+     * @param  array<string, mixed>|Collection<string, mixed>|iterable<string, mixed>  $params
+     */
+    public function setParams(mixed $params): void
     {
-        $this->params = $params;
+        if ($params instanceof Collection) {
+            $this->params = $params->all();
+        } elseif (is_array($params)) {
+            $this->params = $params;
+        } elseif (is_iterable($params)) {
+            $this->params = iterator_to_array($params);
+        } else {
+            $this->params = [];
+        }
     }
 
-    public function hasValidConfiguration()
+    public function hasValidConfiguration(): bool
     {
-        return $this->configuration->has('cloud_name') &&
-            $this->configuration->get('cloud_name') &&
+        return
+            $this->configuration->has('cloud_name') &&
+            (bool) $this->configuration->get('cloud_name') &&
             $this->configuration->has('cloudinary_upload_url') &&
-            $this->configuration->get('cloudinary_upload_url');
+            (bool) $this->configuration->get('cloudinary_upload_url');
     }
 
-    public function baseUrl($item)
+    public function baseUrl(): string
     {
-        return Str::ensureRight($this->configuration->get('cloudinary_upload_url'), '/') .
-            Str::ensureRight($this->configuration->get('cloud_name'), '/') .
-            $this->getAssetType() .
-            '/' .
-            $this->getDeliveryType() .
-            '/';
+        return
+            Str::ensureRight((string) $this->configuration->get('cloudinary_upload_url'), '/').
+            Str::ensureRight((string) $this->configuration->get('cloud_name'), '/').
+            Str::ensureRight($this->getAssetType(), '/').
+            Str::ensureRight((string) $this->getDeliveryType(), '/');
     }
 
     /**
      * @see https://cloudinary.com/documentation/image_transformations#transformation_url_structure
-     *
-     * @param $item
-     * @return void
      */
-    public function setAssetType($item)
+    public function setAssetType(mixed $item): void
     {
         $item = $this->getAsset($item);
 
@@ -153,29 +160,33 @@ class CloudinaryConverter
         }
     }
 
-    public function getAssetType()
+    public function getAssetType(): string
     {
         return $this->asset_type;
     }
 
-    public function getAsset($item)
+    public function getAsset(mixed $item): AssetsAsset
     {
         if ($item instanceof AssetsAsset) {
             return $item;
         }
 
-        if ($asset = Asset::findByUrl(Str::ensureLeft($item, '/'))) {
+        if ($asset = Asset::findByUrl(Str::ensureLeft((string) $item, '/'))) {
+            assert($asset instanceof AssetsAsset);
+
             return $asset;
         }
 
         if ($asset = Asset::find($item)) {
+            assert($asset instanceof AssetsAsset);
+
             return $asset;
         }
 
-        throw new ItemNotFoundException('Asset not found for ' . gettype($item));
+        throw new ItemNotFoundException('Asset not found for '.gettype($item));
     }
 
-    private function getDeliveryType()
+    private function getDeliveryType(): mixed
     {
         return $this->configuration->get('cloudinary_delivery_type');
     }
@@ -183,14 +194,13 @@ class CloudinaryConverter
     /**
      * The URL generation.
      *
-     * @param  string $item  Either the ID or path of the image.
-     * @return string
+     * @param  string|AssetsAsset  $item  Either the ID or path of the image.
      */
-    public function generateCloudinaryUrl($item)
+    public function generateCloudinaryUrl(mixed $item): string
     {
         $item = $this->getAsset($item);
         $url = $this->normalizeItem($item);
-        $manipulation_params = $this->getManipulationParams($item);
+        $manipulation_params = $this->getManipulationParams();
         $meta_params = $this->getMetaParams($item);
 
         $combined_params = $meta_params->merge($manipulation_params);
@@ -199,20 +209,20 @@ class CloudinaryConverter
         if ($this->hasCombinedManipulationParams()) {
             $transformations_slug = $this->buildTransformationSlug($combined_params);
 
-            if (!empty($transformations_slug)) {
+            if ($transformations_slug !== '') {
                 $url = "{$transformations_slug}/{$url}";
             }
         }
 
-        return $this->baseUrl($item) . $url;
+        return $this->baseUrl().$url;
     }
+
     /**
      * The URL generation.
      *
-     * @param  string $item  Either the ID or path of the image.
-     * @return string
+     * @param  string|AssetsAsset  $item  Either the ID or path of the image.
      */
-    public function generateKenBurnsUrl($item)
+    public function generateKenBurnsUrl(mixed $item): string
     {
         $item = $this->getAsset($item);
         $url = $this->normalizeItem($item);
@@ -222,39 +232,48 @@ class CloudinaryConverter
 
         $url = "{$transformations_slug}/{$url}";
 
-        return $this->baseUrl($item) . $url;
+        return $this->baseUrl().$url;
     }
 
-    private function hasCombinedManipulationParams()
+    private function hasCombinedManipulationParams(): bool
     {
         return $this->getManipulationParams()->isNotEmpty() || $this->default_transformations->isNotEmpty();
     }
 
-    private function getMetaParams($item)
+    private function getMetaParams(AssetsAsset $item): Collection
     {
         $params = collect();
-        $manipulation_params = $this->getManipulationParams($item);
+        $manipulation_params = $this->getManipulationParams();
 
         // Set focus related parameters.
-        if ($item->get('focus')) {
-            [$x_percentage, $y_percentage, $zoom] = explode('-', $item->get('focus'));
+        $focus = $item->get('focus');
+        if (is_string($focus) && $focus !== '') {
+            $parts = explode('-', $focus);
+            if (count($parts) === 3) {
+                [$x_percentage, $y_percentage, $zoomStr] = $parts;
+                if (is_numeric($x_percentage) && is_numeric($y_percentage) && is_numeric($zoomStr)) {
+                    $xPct = (float) $x_percentage;
+                    $yPct = (float) $y_percentage;
+                    $zoom = (float) $zoomStr;
 
-            $x = floor(($x_percentage / 100) * $this->getOriginalWidth($item));
-            $y = floor(($y_percentage / 100) * $this->getOriginalHeight($item));
-            $zoom = floor($zoom * 10) / 10;
+                    $x = (int) floor(($xPct / 100.0) * $this->getOriginalWidth($item));
+                    $y = (int) floor(($yPct / 100.0) * $this->getOriginalHeight($item));
+                    $zoom = floor($zoom * 10.0) / 10.0;
 
-            $params->put('x', $x);
-            $params->put('y', $y);
-            $params->put('zoom', $zoom);
-            $params->put('gravity', 'xy_center');
-        } else if ($manipulation_params->has('crop') && $manipulation_params->get('crop') === 'fill') {
+                    $params->put('x', $x);
+                    $params->put('y', $y);
+                    $params->put('zoom', $zoom);
+                    $params->put('gravity', 'xy_center');
+                }
+            }
+        } elseif ($manipulation_params->has('crop') && $manipulation_params->get('crop') === 'fill') {
             /**
              * When using `fit="crop_focal"` in statamic and NOT defining a focal point, the asset is cropped by glide from the center point.
              * In contrary, when using cloudinary, this is not the case.
              * The following code replicates this behavior.
              */
-            $x = floor(0.5 * $this->getOriginalWidth($item));
-            $y = floor(0.5 * $this->getOriginalHeight($item));
+            $x = (int) floor(0.5 * $this->getOriginalWidth($item));
+            $y = (int) floor(0.5 * $this->getOriginalHeight($item));
             $zoom = 1;
 
             $params->put('x', $x);
@@ -269,19 +288,17 @@ class CloudinaryConverter
     /**
      * Get the tag parameters applicable to image manipulation.
      *
-     * @return \Illuminate\Support\Collection
+     * @return Collection<string, mixed>
      */
-    public function getManipulationParams()
+    public function getManipulationParams(): Collection
     {
         $params = collect();
 
-        foreach ($this->params as $param => $value) {
-            if (!in_array($param, ['src', 'id', 'path', 'tag', 'alt'])) {
-                switch ($param) {
-                    case 'format':
-                        $params->put('fetch_format', $value);
-                        break;
+        $excluded = ['src', 'id', 'path', 'tag', 'alt'];
 
+        foreach ($this->params as $param => $value) {
+            if (! in_array($param, $excluded, true)) {
+                switch ($param) {
                     case 'square':
                         $params->put('width', $value);
                         $params->put('aspect_ratio', '1:1');
@@ -317,92 +334,108 @@ class CloudinaryConverter
         return $params;
     }
 
-    private function getOriginalWidth(AssetsAsset $item)
+    private function getOriginalWidth(AssetsAsset $item): int
     {
-        return $item->meta('width');
+        $width = $item->meta('width');
+
+        return is_numeric($width) ? (int) $width : 0;
     }
 
-    private function getOriginalHeight(AssetsAsset $item)
+    private function getOriginalHeight(AssetsAsset $item): int
     {
-        return $item->meta('height');
+        $height = $item->meta('height');
+
+        return is_numeric($height) ? (int) $height : 0;
     }
 
-    private function getOriginalAspectRatio(AssetsAsset $item)
+    private function getOriginalAspectRatio(AssetsAsset $item): float
     {
         $width = $this->getOriginalWidth($item);
         $height = $this->getOriginalHeight($item);
 
-        if (!$width || !$height) {
-            return 1;
+        if ($width === 0 || $height === 0) {
+            return 1.0;
         }
 
         return $width / $height;
     }
 
-    public function getFinalDimensions($item)
+    /**
+     * @return array{0: int, 1: int}
+     */
+    public function getFinalDimensions(mixed $item): array
     {
         $item = $this->getAsset($item);
         $width = (int) $this->getManipulationParams()->get('width');
         $height = (int) $this->getManipulationParams()->get('height');
-        $aspect_ratio =
-            (int) $this->getManipulationParams()->get('aspect_ratio') ?: $this->getOriginalAspectRatio($item);
+        $aspect_ratio = $this->resolveAspectRatio(
+            $this->getManipulationParams()->get('aspect_ratio'),
+            $item,
+        );
 
-        if ($width && $height) {
+        if ($width !== 0 && $height !== 0) {
             return [$width, $height];
         }
 
-        if ($width) {
-            return [$width, round($width / $aspect_ratio)];
+        if ($width !== 0) {
+            return [$width, (int) round($width / $aspect_ratio)];
         }
 
-        if ($height) {
-            return [round($height * $aspect_ratio), $height];
+        if ($height !== 0) {
+            return [(int) round($height * $aspect_ratio), $height];
         }
 
         return [0, 0];
     }
 
     /**
-     * Normalize an item to be passed into the manipulator.
-     *
-     * @param  string $item  An asset ID, asset URL, or external URL.
-     * @return string|Statamic\Contracts\Assets\Asset
+     * Resolve aspect ratio from manipulation params (e.g. "16:9") or fall back to the asset.
      */
-    private function normalizeItem($item)
+    private function resolveAspectRatio(mixed $aspectRatio, AssetsAsset $item): float
     {
-        // Double colons indicate an asset ID.
-        if (Str::contains($item, '::')) {
-            $item = Asset::find($item);
+        if ($aspectRatio === null || $aspectRatio === '') {
+            return $this->getOriginalAspectRatio($item);
         }
 
-        $item = Str::ensureLeft(Str::removeLeft($item, '/'), $this->configuration->get('auto_mapping_folder'));
-
-        if ($this->configuration->get('external_url_prefix')) {
-            $item = Str::replace(Str::ensureRight($this->configuration->get('external_url_prefix'), '/'), '', $item);
+        if (is_string($aspectRatio) && str_contains($aspectRatio, ':')) {
+            [$w, $h] = explode(':', $aspectRatio, 2);
+            if (is_numeric($w) && is_numeric($h) && (float) $h !== 0.0) {
+                return (float) $w / (float) $h;
+            }
         }
 
-        return $item;
+        if (is_numeric($aspectRatio)) {
+            return (float) $aspectRatio;
+        }
+
+        return $this->getOriginalAspectRatio($item);
     }
 
-    /**
-     * The list of allowed file formats based on the configured driver.
-     *
-     * @return array
-     */
-    private function allowedFileFormats()
+    private function normalizeItem(AssetsAsset $item): string
     {
-        return ['jpeg', 'jpg', 'png', 'gif', 'tif', 'bmp', 'psd', 'webp'];
+        $path = ltrim($item->absoluteUrl(), '/');
+        $path = Str::ensureLeft($path, (string) $this->configuration->get('auto_mapping_folder'));
+
+        if ($this->configuration->get('external_url_prefix')) {
+            $path = Str::replace(Str::ensureRight((string) $this->configuration->get('external_url_prefix'), '/'), '', $path);
+        }
+
+        return $path;
     }
 
     /**
      * Build a Cloudinary transformation slug from arguments.
      *
-     * @param  array $args
-     * @return string
+     * @param  Collection<string, mixed>|array<string, mixed>|null  $args
      */
-    public function buildTransformationSlug($args = null)
+    public function buildTransformationSlug(Collection|array|null $args = null): string
     {
-        if (!$args || !$args instanceof Collection) {
+        if ($args === null) {
+            return '';
+        }
+
+        $args = collect($args);
+        if ($args->isEmpty()) {
             return '';
         }
 
@@ -415,65 +448,62 @@ class CloudinaryConverter
 
         $fetch_format = null;
         if ($args->get('fetch_format')) {
-            $fetch_format = $this->cloudinary_params->get('fetch_format') . '_' . $args->get('fetch_format');
+            $fetch_format = $this->cloudinary_params->get('fetch_format').'_'.$args->get('fetch_format');
             $args->forget('fetch_format');
         }
 
         $quality = null;
         if ($args->get('quality')) {
-            $quality = $this->cloudinary_params->get('quality') . '_' . $args->get('quality');
+            $quality = $this->cloudinary_params->get('quality').'_'.$args->get('quality');
             $args->forget('quality');
         }
 
         $slug = $args
-            ->map(function ($value, $key) {
+            ->map(function ($value, string $key): ?string {
                 if (
-                    $this->cloudinary_params->has($key) &&
-                    $this->isValidCloudinaryParam($this->cloudinary_params->get($key), $value)
+                    ! $this->cloudinary_params->has($key) ||
+                    ! $this->isValidCloudinaryParam((string) $this->cloudinary_params->get($key), $value)
                 ) {
-                    switch ($key) {
-                        case 'progressive':
-                            if (true === $value) {
-                                return $this->cloudinary_params->get($key);
-                            } else {
-                                return $this->cloudinary_params->get($key) . ':' . $value;
-                            }
-                            break;
-                        default:
-                            return $this->cloudinary_params->get($key) . '_' . $value;
-                    }
-                } else {
-                    Log::warning('Unknown Cloudinary parameter [' . $key . '] for asset ');
+                    Log::warning('Unknown Cloudinary parameter ['.$key.'] for Cloudinary transformation slug');
+
+                    return null;
                 }
+
+                $shortKey = (string) $this->cloudinary_params->get($key);
+
+                if ($key === 'progressive') {
+                    return $value === true ? $shortKey : $shortKey.':'.$value;
+                }
+
+                return $shortKey.'_'.$value;
             })
             ->filter();
 
         $transformation_slug = $slug->implode(urlencode(','));
-        if ($quality) {
-            $transformation_slug = $transformation_slug . '/' . $quality;
+        if ($quality !== null) {
+            $transformation_slug = $transformation_slug.'/'.$quality;
         }
-        if ($fetch_format) {
-            $transformation_slug = $transformation_slug . '/' . $fetch_format;
+        if ($fetch_format !== null) {
+            $transformation_slug = $transformation_slug.'/'.$fetch_format;
         }
 
         return $transformation_slug;
     }
 
-    public function getDefaultTransformationByType($type)
+    /**
+     * @return mixed
+     */
+    public function getDefaultTransformationByType(?string $type)
     {
         return $this->default_transformations->get($type);
     }
 
     /**
      * Check if the value is valid.
-     *
-     * @param string $key
-     * @param string $value
-     * @return bool
      */
-    public function isValidCloudinaryParam($key = '', $value = '')
+    public function isValidCloudinaryParam(string $key = '', mixed $value = null): bool
     {
-        if (('w' === $key || 'h' === $key) && empty($value)) {
+        if (($key === 'w' || $key === 'h') && ($value === null || $value === '')) {
             return false;
         }
 

@@ -4,8 +4,14 @@
       "TFD\\Cloudinary\\": "src"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
   "config": {
     "allow-plugins": {
+      "pestphp/pest-plugin": true,
       "pixelfear/composer-dist-plugin": true
     }
   },
@@ -27,10 +33,15 @@
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.88",
-    "phpunit/phpunit": "^10.5 || ^11.5",
+    "mockery/mockery": "^1.6",
+    "orchestra/testbench": "^9.0",
+    "pestphp/pest": "^2.36",
+    "pestphp/pest-plugin-laravel": "^2.4",
+    "phpunit/phpunit": "^10.5",
     "squizlabs/php_codesniffer": "^3.6"
   },
   "scripts": {
-    "lint": "@php ./vendor/bin/php-cs-fixer fix -v --config .php-cs-fixer.php"
+    "lint": "@php ./vendor/bin/php-cs-fixer fix -v --config .php-cs-fixer.php",
+    "test": "@php ./vendor/bin/pest"
   }
 }

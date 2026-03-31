@@ -1,17 +1,17 @@
 <?php
 
+declare(strict_types=1);
 namespace TFD\Cloudinary\Components;
 
-use Illuminate\View\Component;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ItemNotFoundException;
+use Illuminate\View\Component;
 use Illuminate\View\ComponentAttributeBag;
 use TFD\Cloudinary\Converter\CloudinaryConverter;
 use TFD\Cloudinary\Interfaces\CloudinaryInterface;
 
 class Image extends Component implements CloudinaryInterface
 {
-
     protected $converter;
 
     public function __construct(CloudinaryConverter $converter)
@@ -19,36 +19,36 @@ class Image extends Component implements CloudinaryInterface
         $this->setConverter($converter);
     }
 
-    public function setConverter($converter)
+    public function setConverter(CloudinaryConverter $converter): void
     {
         $this->converter = $converter;
     }
 
-    public function render()
+    public function render(): mixed
     {
         if (! $this->converter->hasValidConfiguration()) {
-            return false;
+            return '';
         }
 
         return function (array $data) {
             /** @var ComponentAttributeBag */
             $attributeBag = $data['attributes'];
             $attributes = $attributeBag->getAttributes();
-            
-            if (!$attributeBag->has('src')) {
-                return false;
+
+            if (! $attributeBag->has('src')) {
+                return '';
             }
-            
+
             $this->converter->setParams($attributes);
-            
+
             $item = $attributeBag->get('src');
             $item = $this->converter->getAsset($item);
-            
+
             try {
                 $this->converter->setAssetType($item);
             } catch (ItemNotFoundException $e) {
                 Log::error($e->getMessage());
-    
+
                 return '';
             }
 
@@ -62,7 +62,18 @@ class Image extends Component implements CloudinaryInterface
                 'height' => $height,
             ]));
 
-            return view('cloudinary::components.image', $viewData->toArray())->render();
+            return view($this->resolveViewName(), $viewData->toArray())->render();
         };
+    }
+
+    private function resolveViewName(): string
+    {
+        $legacyPublishedView = resource_path('views/vendor/cloudinary/components/image.blade.php');
+
+        if (file_exists($legacyPublishedView)) {
+            return 'cloudinary::components.image';
+        }
+
+        return 'cloudinary::components.cloudinary-image';
     }
 }

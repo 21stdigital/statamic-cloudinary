@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 namespace TFD\Cloudinary\Tags;
 
 use Illuminate\Support\Facades\Log;
@@ -11,8 +12,9 @@ use TFD\Cloudinary\Interfaces\CloudinaryInterface;
 
 class Cloudinary extends Tags implements CloudinaryInterface
 {
-    protected $converter;
-    private $glide;
+    protected CloudinaryConverter $converter;
+
+    private ?Glide $glide = null;
 
     public static function resetStaticState()
     {
@@ -23,16 +25,18 @@ class Cloudinary extends Tags implements CloudinaryInterface
         $this->setConverter($converter);
     }
 
-    public function setConverter($converter)
+    public function setConverter(CloudinaryConverter $converter): void
     {
         $this->converter = $converter;
     }
 
-    public function setParameters($parameters)
+    public function setParameters($parameters): static
     {
         parent::setParameters($parameters);
 
         $this->converter->setParams($parameters);
+
+        return $this;
     }
 
     public function getGlideFallback()
@@ -40,9 +44,9 @@ class Cloudinary extends Tags implements CloudinaryInterface
         if ($this->params->has('aspect_ratio')) {
             $aspect_ratio = $this->params->get('aspect_ratio');
             $this->params->forget('aspect_ratio');
-            if (str_contains($aspect_ratio, ':')) {
-                [$ratio_width, $ratio_height] = explode(':', $aspect_ratio);
-                $aspect_ratio = $ratio_width / $ratio_height;
+            if (is_string($aspect_ratio) && str_contains($aspect_ratio, ':')) {
+                [$ratio_width, $ratio_height] = explode(':', $aspect_ratio, 2);
+                $aspect_ratio = (float) $ratio_width / (float) $ratio_height;
             }
             if ($this->params->has('width')) {
                 $this->params->put('height', $this->params->get('width') / $aspect_ratio);
@@ -55,8 +59,8 @@ class Cloudinary extends Tags implements CloudinaryInterface
             $this->params->put('format', 'jpg');
         }
 
-        if (!$this->glide) {
-            $this->glide = new Glide();
+        if (! $this->glide) {
+            $this->glide = new Glide;
             $this->glide->setProperties([
                 'parser' => $this->parser,
                 'content' => $this->content,
@@ -66,6 +70,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
                 'tag_method' => $this->method,
             ]);
         }
+
         return $this->glide;
     }
 
@@ -74,17 +79,15 @@ class Cloudinary extends Tags implements CloudinaryInterface
      *
      * Where `field` is the variable containing the image ID
      *
-     * @param  $method
-     * @param  $args
-     * @return string
+     * @return string|array<int, array<string, mixed>|string>
      */
-    public function wildcard()
+    public function wildcard($tag)
     {
-        if (!$this->converter->hasValidConfiguration()) {
+        if (! $this->converter->hasValidConfiguration()) {
             return $this->getGlideFallback()->wildcard();
         }
 
-        $tag = explode(':', $this->tag, 2)[1];
+        $tag = $tag ?? explode(':', $this->tag, 2)[1];
         if ($tag === 'ken_burns' || $tag === 'kenburns') {
             return $this->kenBurns();
         }
@@ -102,66 +105,64 @@ class Cloudinary extends Tags implements CloudinaryInterface
 
             return $this->getGlideFallback()->wildcard();
         }
+
         return $this->output($this->converter->generateCloudinaryUrl($item));
     }
 
     /**
      * The {{ cloudinary }} tag.
      *
-     * @return string|array
+     * @return string|array|bool
      */
     public function index()
     {
-        if (!$this->converter->hasValidConfiguration()) {
+        if (! $this->converter->hasValidConfiguration()) {
             return $this->getGlideFallback()->index();
         }
 
-        if (!($src = $this->params->get('src'))) {
+        if (! ($src = $this->params->get('src'))) {
             return $this->sourceIsEmptyError();
-        } else {
-            $item = $this->converter->getAsset($src);
-
-            try {
-                $this->converter->setAssetType($item);
-            } catch (ItemNotFoundException $e) {
-                Log::error($e->getMessage());
-
-                return $this->getGlideFallback()->index();
-            }
-            return $this->output($this->converter->generateCloudinaryUrl($item));
         }
 
-        return $this->getGlideFallback()->index();
-    }
+        $item = $this->converter->getAsset($src);
 
+        try {
+            $this->converter->setAssetType($item);
+        } catch (ItemNotFoundException $e) {
+            Log::error($e->getMessage());
+
+            return $this->getGlideFallback()->index();
+        }
+
+        return $this->output($this->converter->generateCloudinaryUrl($item));
+    }
 
     /**
      * The {{ cloudinary:ken_burns }} tag.
      *
-     * @return string|array
+     * @return string|array|bool
      */
     public function kenBurns()
     {
-        if (!$this->converter->hasValidConfiguration()) {
+        if (! $this->converter->hasValidConfiguration()) {
             return $this->getGlideFallback()->index();
         }
 
-        if (!($src = $this->params->get('src'))) {
+        if (! ($src = $this->params->get('src'))) {
             return $this->sourceIsEmptyError();
-        } else {
-            $item = $this->converter->getAsset($src);
-
-            try {
-                $this->converter->setAssetType($item);
-            } catch (ItemNotFoundException $e) {
-                Log::error($e->getMessage());
-
-                return $this->getGlideFallback()->index();
-            }
-            return $this->output($this->converter->generateKenBurnsUrl($item));
         }
 
-        return $this->getGlideFallback()->index();
+        $item = $this->converter->getAsset($src);
+
+        try {
+            $this->converter->setAssetType($item);
+        } catch (ItemNotFoundException $e) {
+            Log::error($e->getMessage());
+
+            return $this->getGlideFallback()->index();
+        }
+
+        return $this->output($this->converter->generateKenBurnsUrl($item));
     }
 
     /**
@@ -169,7 +170,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
      *
      * Generates the image and makes variables available within the pair.
      *
-     * @return string
+     * @return array<int, array<string, mixed>|string>
      */
     public function generate($items = null)
     {
@@ -200,14 +201,28 @@ class Cloudinary extends Tags implements CloudinaryInterface
 
     /**
      * Output the tag.
-     *
-     * @param string $url
-     * @return string
      */
-    private function output($url)
+    private function output(string $url): string
     {
         if ($this->isPair) {
-            return $this->parse(compact('url', 'width', 'height'));
+            $src = $this->params->get('src')
+                ?? $this->params->get('id')
+                ?? $this->params->get('path');
+
+            if ($src === null || $src === '') {
+                return $this->parse(compact('url'));
+            }
+
+            try {
+                $item = $this->converter->getAsset($src);
+                [$width, $height] = $this->converter->getFinalDimensions($item);
+
+                return $this->parse(compact('url', 'width', 'height'));
+            } catch (ItemNotFoundException $e) {
+                Log::error($e->getMessage());
+
+                return $this->parse(compact('url'));
+            }
         }
         if ($this->params->bool('tag')) {
             return "<img src=\"$url\" alt=\"{$this->params->get('alt')}\" />";
@@ -218,23 +233,23 @@ class Cloudinary extends Tags implements CloudinaryInterface
 
     /**
      * Error Log for src is empty.
-     *
-     * @return bool
      */
-    private function sourceIsEmptyError()
+    private function sourceIsEmptyError(): bool
     {
         $additionalInformation = [];
 
-        try {
-            $additionalInformation[] = 'field_id:[' . $this->context['id'] . ']';
-            $additionalInformation[] = 'page_id:[' . $this->context['page']->id . ']';
-        } catch (\Throwable $th) {
+        if (isset($this->context['id'])) {
+            $additionalInformation[] = 'field_id:['.$this->context['id'].']';
+        }
 
+        if (isset($this->context['page']) && is_object($this->context['page']) && isset($this->context['page']->id)) {
+            $additionalInformation[] = 'page_id:['.$this->context['page']->id.']';
         }
 
         $additionalInformation = implode(', ', $additionalInformation);
 
         Log::error("Cloudinary parameter \"src\" is empty | Context: $additionalInformation");
+
         return false;
     }
 }

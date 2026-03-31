@@ -1,0 +1,10 @@
+# Run analysis from the consuming Laravel app (includes Larastan), e.g.:
+#   ./vendor/bin/phpstan analyse
+# with this package path listed in the app's phpstan.neon `paths`.
+#
+# Standalone: ./vendor/bin/phpstan analyse -c phpstan.neon.dist (requires dev deps).
+
+parameters:
+    level: 5
+    paths:
+        - src

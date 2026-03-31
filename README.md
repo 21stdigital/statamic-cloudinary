@@ -1,14 +1,18 @@
 # Cloudinary
 
-> Cloudinary is a Statamic addon that allows you to use cloudinary to deliver your assets.
+> Cloudinary is a Statamic addon that allows you to use [Cloudinary](https://cloudinary.com) to deliver your assets.
 
 ## Features
 
 This addon allows you to:
 
-- leverage the transformation and delivery power of cloudinary
-- usable with images and videos
-- automatically upload media to cloudinary
+- leverage the transformation and delivery power of Cloudinary
+- use images and videos with the same tag patterns
+- rely on Cloudinary auto-upload mapping so media can be delivered from Cloudinary after the first request
+
+## Requirements
+
+- Statamic `^5.73.11` or `^6.4` (same constraint as this package; PHP and Laravel versions follow your Statamic project)
 
 ## How to Install
 
@@ -25,7 +29,7 @@ Supported Statamic versions: `5.73.11+` and `6.6.2+`.
 ### 1. Create a Cloudinary Account
 
 Go to https://cloudinary.com and create a free account.  
-It is recommended to create a new folder inside cloudinary's Media Library that hosts all the media of your website.
+It is recommended to create a new folder inside Cloudinary's Media Library that hosts all the media of your website.
 
 Go to `Settings > Upload > Auto upload mapping` and fill out
 
@@ -47,10 +51,10 @@ php artisan vendor:publish --tag="cloudinary-config"
 
 This will create a `cloudinary.php` file inside `config/statamic`.
 
-### 3. Setup cloudinary variables
+### 3. Setup Cloudinary variables
 
-Enter at least the following data in the cloudinary.php file or use your project's .env file.  
-The `auto_mapping_folder` is the folder you've created during the first step.
+Enter at least the following data in `config/statamic/cloudinary.php` or use your project's `.env` file.  
+The `auto_mapping_folder` is the folder you've created during the first step.  
 The `url` is the API Environment variable you've copied from the first step.
 
 ```php
@@ -68,6 +72,14 @@ CLOUDINARY_CLOUD_NAME=xxx
 CLOUDINARY_AUTO_MAPPING_FOLDER=xxx
 CLOUDINARY_URL=cloudinary://xxx:xxx@xxx
 ```
+
+The published config file also includes optional keys used for uploads, delivery type, and defaults, for example:
+
+- `upload_url` — base upload/delivery URL (default `https://res.cloudinary.com/`)
+- `api_key`, `api_secret`, `upload_preset`, `notification_url` — for signed uploads or webhooks if you use them
+- `delivery_type` — defaults to `upload`; adjust if your delivery setup differs
+
+See the full `config/statamic/cloudinary.php` after publishing for all keys and defaults.
 
 #### 3.1. Using an External URL
 
@@ -90,15 +102,18 @@ CLOUDINARY_EXTERNAL_URL_PREFIX=https://my-external-asset-url.com
 
 For example, if you are using DigitalOcean Spaces storage and your assets are served from this URL:  
 `https://my-project.us1.digitaloceanspaces.com/website/image.jpg`, the external URL consists of two parts:
+
 - `https://my-project.us1.digitaloceanspaces.com` - The DigitalOcean base URL
 - `/website` - The root folder in DigitalOcean
 
 The actual value you need to set in the config or .env file would be:  
 `CLOUDINARY_EXTERNAL_URL_PREFIX=https://my-project.us1.digitaloceanspaces.com/website/`
 
-### 4. Use the cloudinary tag
+### 4. Use the Cloudinary tag
 
-You are now ready to use the cloudinary tag inside your views.
+You are now ready to use the Cloudinary tag inside your views.
+
+If Cloudinary is not configured correctly, the tag falls back to Statamic's Glide-based image handling. Failed asset lookups in non-pair tag usage may also fall back to Glide.
 
 #### Some examples
 
@@ -111,7 +126,7 @@ The image is transformed according to the default transformation parameters, see
 ---
 
 ```html
-<img src="{{ cloudinary:image width="800" height="500" }}">
+<img src="{{ cloudinary:image width="800" height="500" }}" />
 ```
 
 The image is resized to 800 x 500 px.
@@ -164,7 +179,7 @@ Usage with other parameters.
 />
 ```
 
-There is also a custom blade component to use cloudinary in your blade templates. The `src` attribute is required.
+There is also a custom Blade component to use Cloudinary in your Blade templates. The `src` attribute is required. If Cloudinary is not configured or `src` is missing, the component outputs nothing. The current component alias is `<x-cloudinary-image />`; the legacy `<x-image />` alias and published `components/image.blade.php` override remain supported for backward compatibility.
 
 ### 5. Available parameters
 
@@ -204,6 +219,7 @@ For more information about these parameters, head over to the [cloudinary docume
 | delay                |
 | density              |
 | fetch_format         |
+| format               |
 | gravity              |
 | prefix               |
 | page                 |
@@ -242,4 +258,4 @@ Run the following command from your project root:
 php artisan vendor:publish --tag="cloudinary-views"
 ```
 
-This will publish the cloudinary views to the `resources/views/vendor/cloudinary`folder.
+This will publish the Cloudinary views to the `resources/views/vendor/cloudinary` folder.
