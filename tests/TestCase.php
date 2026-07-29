@@ -3,10 +3,13 @@
 declare(strict_types=1);
 namespace Tests;
 
-use Orchestra\Testbench\TestCase as Orchestra;
+use Statamic\Testing\AddonTestCase;
+use TFD\Cloudinary\ServiceProvider;
 
-abstract class TestCase extends Orchestra
+abstract class TestCase extends AddonTestCase
 {
+    protected string $addonServiceProvider = ServiceProvider::class;
+
     protected function defineEnvironment($app): void
     {
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));

@@ -84,6 +84,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,windows,composer
 
 .php_cs.cache
+.php-cs-fixer.cache
 node_modules
 vendor
 mix-manifest.json

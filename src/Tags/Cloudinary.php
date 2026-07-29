@@ -84,7 +84,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
     public function wildcard($tag)
     {
         if (! $this->converter->hasValidConfiguration()) {
-            return $this->getGlideFallback()->wildcard();
+            return $this->getGlideFallback()->wildcard($tag);
         }
 
         $tag = $tag ?? explode(':', $this->tag, 2)[1];
@@ -103,7 +103,7 @@ class Cloudinary extends Tags implements CloudinaryInterface
         } catch (ItemNotFoundException $e) {
             Log::error($e->getMessage());
 
-            return $this->getGlideFallback()->wildcard();
+            return $this->getGlideFallback()->wildcard($tag);
         }
 
         return $this->output($this->converter->generateCloudinaryUrl($item));
