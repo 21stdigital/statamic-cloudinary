@@ -11,7 +11,7 @@ Guidance for coding agents working in `tfd/statamic-cloudinary`.
 - Package runtime config lives in `config/cloudinary.php` and is published to `config/statamic/cloudinary.php`.
 - Blade views live in `resources/views/`.
 - There is no frontend build pipeline for this addon.
-- Tests use Pest with Orchestra Testbench in `tests/`, for example `tests/Unit/CloudinaryConverterTest.php`.
+- Tests use Pest in `tests/`, for example `tests/Unit/CloudinaryConverterTest.php`. `Tests\TestCase` extends Statamic's `AddonTestCase`, so Statamic and this addon's service provider are booted — tags that run Statamic hooks need that.
 
 ## Rule Sources
 
@@ -99,7 +99,9 @@ Run filtered tests:
 ./vendor/bin/pest --filter=CloudinaryConverter
 ```
 
-Test config lives in `phpunit.xml`; `tests/Pest.php` binds `Tests\TestCase` for `tests/Unit`.
+Test config lives in `phpunit.xml`; `tests/Pest.php` binds `Tests\TestCase` for `tests/Unit`. Test doubles live in `tests/Fixtures/`.
+
+The test harness runs on Laravel 12 (`orchestra/testbench ^10`). The package itself still declares support for Statamic `^5`, whose Laravel 10/11 range is therefore not covered by a test run — there is no CI matrix.
 
 ## Files And Responsibilities
 
